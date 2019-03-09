@@ -22,7 +22,8 @@ public class Dictionary {
                     break;
                 case "find":
                     param=scanner.next();
-                    dict.findItem(param);
+                    Item result=dict.findItem(param);
+                    result.print();
                     break;
                 case "size":
                     System.out.println("Total number of words : "+dict.items.length);
@@ -35,8 +36,15 @@ public class Dictionary {
             }
         }
     }
-    public void findItem(String param){
-            //TODO
+    public Item findItem(String param){
+        return findItem(param,0,1);
+    }
+    public Item findItem(String param,int index,int level){//TODO Check ascend
+        int diff=param.compareTo(items[index].word);
+        if(diff==0)return items[index];
+        else return diff>0?
+                findItem(param,(int)(index+items.length/(Math.pow(2,level))),level+1):
+                findItem(param,(int)(index-items.length/(Math.pow(2,level))),level+1);
     }
     public void readFile(String src){
         File file=new File(src);
@@ -61,6 +69,12 @@ public class Dictionary {
 class Item{
     public String word;
     public Meanings[] means;
+    public void print(){
+        for(int i=0;i<means.length;i++){
+            System.out.print(word);
+            means[i].print();
+        }
+    }
     public void expandMean(){
         Meanings[] temp=new Meanings[means.length+1];
         System.arraycopy(means,0,temp,0,means.length);
@@ -69,4 +83,8 @@ class Item{
 }
 class Meanings{
     public String type,description;
+    public void print(){
+        System.out.print(" : ("+type+") : ");
+        System.out.println(description);
+    }
 }
