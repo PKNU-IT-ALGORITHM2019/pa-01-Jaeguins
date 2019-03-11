@@ -1,11 +1,10 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Dictionary {
-    public Item[] items;
-
+    public ArrayList<Item> items=new ArrayList<Item>();
+    int maxLevel=0;
 
 
 
@@ -23,10 +22,13 @@ public class Dictionary {
                 case "find":
                     param=scanner.next();
                     Item result=dict.findItem(param);
+                    if(result!=null)
                     result.print();
+                    else
+                        System.out.println(param+" not found");
                     break;
                 case "size":
-                    System.out.println("Total number of words : "+dict.items.length);
+                    System.out.println("Total number of words : "+dict.items.size());
                     break;
                 case "exit":
                     return;
@@ -39,49 +41,69 @@ public class Dictionary {
     public Item findItem(String param){
         return findItem(param,0,1);
     }
-    public Item findItem(String param,int index,int level){//TODO Check ascend
-        int diff=param.compareTo(items[index].word);
-        if(diff==0)return items[index];
+    public Item findItem(String param,double index,int level){//TODO Check ascend
+        if(level>=maxLevel*2||index>=items.size()||index<0)return null;
+        int diff=param.toLowerCase().compareTo(items.get((int)index).word.toLowerCase());
+        if(diff==0)return items.get((int)index);
         else return diff>0?
-                findItem(param,(int)(index+items.length/(Math.pow(2,level))),level+1):
-                findItem(param,(int)(index-items.length/(Math.pow(2,level))),level+1);
+                findItem(param,(index+items.size()/(Math.pow(2,level))),level+1):
+                findItem(param,(index-items.size()/(Math.pow(2,level))),level+1);
     }
     public void readFile(String src){
+        int count=0;
         File file=new File(src);
         try{
-            FileReader reader=new FileReader(file);
-            //TODO
-            System.out.println(items.length+" word(s) found.");
+            FileInputStream inputStream=new FileInputStream(file);
+            Scanner scanner=new Scanner(inputStream);
+            while (true) {
+                if (!scanner.hasNext()) break;
+                String t = scanner.nextLine();
+                if (t.length() == 0) continue;
+                String word = t.substring(0, t.indexOf('(')-1);
+                String type = t.substring(t.indexOf('(')+1, t.indexOf(')'));
+                String desc = t.substring(t.indexOf(')')+1);
+                addItem(word, type, desc);
+                count++;
+            }
+            inputStream.close();
+            System.out.println(items.size()+"/"+count+" word(s) found.");
             return;
         }
-        catch(FileNotFoundException e){
+        catch(IOException e){
             System.out.println("File not fount.\n");
             return;
         }
     }
-    void expandItem(){
-        Item[] temp=new Item[items.length+1];
-        System.arraycopy(items,0,temp,0,items.length);
-        items=temp;
+    void addItem(String word, String type,String desc){
+        Item temp=findItem(word);
+        if(temp!=null)temp.means.add(new Meanings(type,desc));
+        else{
+            temp=new Item(word);
+            temp.means.add(new Meanings(type,desc));
+            items.add(temp);
+            maxLevel=(int)(Math.log(items.size())/Math.log(2));
+        }
     }
 }
 
 class Item{
-    public String word;
-    public Meanings[] means;
-    public void print(){
-        for(int i=0;i<means.length;i++){
-            System.out.print(word);
-            means[i].print();
-        }
+    public Item(String word){
+        this.word=word;
     }
-    public void expandMean(){
-        Meanings[] temp=new Meanings[means.length+1];
-        System.arraycopy(means,0,temp,0,means.length);
-        means=temp;
+    public String word;
+    public ArrayList<Meanings> means=new ArrayList<Meanings>();
+    public void print(){
+        for(int i=0;i<means.size();i++){
+            System.out.print(word);
+            means.get(i).print();
+        }
     }
 }
 class Meanings{
+    public Meanings(String type,String desc){
+        this.type=type;
+        description=desc;
+    }
     public String type,description;
     public void print(){
         System.out.print(" : ("+type+") : ");
