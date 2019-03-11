@@ -3,9 +3,9 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Dictionary {
-    public ArrayList<Item> items=new ArrayList<Item>();
-    int maxLevel=0;
-
+    private ArrayList<Item> items=new ArrayList<Item>();
+    private int maxLevel=0;
+    private int count;
 
 
     public static void main(String args[]){
@@ -20,12 +20,17 @@ public class Dictionary {
                     dict.readFile(param);
                     break;
                 case "find":
-                    param=scanner.next();
+                    param=scanner.nextLine().substring(1);
                     Item result=dict.findItem(param);
-                    if(result!=null)
-                    result.print();
-                    else
-                        System.out.println(param+" not found");
+                    if(result!=null&&result.word.equalsIgnoreCase(param))
+                        result.print();
+                    else{
+                        System.out.println("Not found");
+                        System.out.println(dict.items.get(result.index-1).getLast());
+                        System.out.println("- - -");
+                        System.out.println(dict.items.get(result.index).getFirst());
+                    }
+
                     break;
                 case "size":
                     System.out.println("Total number of words : "+dict.items.size());
@@ -38,75 +43,93 @@ public class Dictionary {
             }
         }
     }
-    public Item findItem(String param){
+    private int find(String param){
+        return findItem(param).index;
+    }
+    private Item findItem(String param){
         return findItem(param,0,1);
     }
-    public Item findItem(String param,double index,int level){//TODO Check ascend
-        if(level>=maxLevel*2||index>=items.size()||index<0)return null;
+    private Item findItem(String param, double index, int level){
+        if(index>=items.size()||index<0)return null;
+        if(level>=maxLevel*2)return items.get((int) index);
         int diff=param.toLowerCase().compareTo(items.get((int)index).word.toLowerCase());
         if(diff==0)return items.get((int)index);
-        else return diff>0?
-                findItem(param,(index+items.size()/(Math.pow(2,level))),level+1):
-                findItem(param,(index-items.size()/(Math.pow(2,level))),level+1);
+        else {
+            double t=items.size() / Math.pow(2, level);
+            if (t<1) return items.get((int) index);
+            else return diff > 0 ?
+                    findItem(param, index + t, level + 1) :
+                    findItem(param, index - t, level + 1);
+        }
     }
-    public void readFile(String src){
-        int count=0;
+    private void readFile(String src){
+        count=0;
         File file=new File(src);
         try{
             FileInputStream inputStream=new FileInputStream(file);
             Scanner scanner=new Scanner(inputStream);
-            while (true) {
-                if (!scanner.hasNext()) break;
+            while (scanner.hasNext()) {
                 String t = scanner.nextLine();
                 if (t.length() == 0) continue;
-                String word = t.substring(0, t.indexOf('(')-1);
-                String type = t.substring(t.indexOf('(')+1, t.indexOf(')'));
-                String desc = t.substring(t.indexOf(')')+1);
+                String word = t.substring(0, t.indexOf('(') - 1);
+                String type = t.substring(t.indexOf('(') + 1, t.indexOf(')'));
+                String desc = t.substring(t.indexOf(')') + 1);
                 addItem(word, type, desc);
                 count++;
             }
             inputStream.close();
-            System.out.println(items.size()+"/"+count+" word(s) found.");
-            return;
+            System.out.println(count+" word(s) found, "+(count-items.size())+" were merged.");
         }
         catch(IOException e){
-            System.out.println("File not fount.\n");
-            return;
+            System.out.println("File not found.");
         }
     }
-    void addItem(String word, String type,String desc){
+    private void addItem(String word, String type, String desc){
         Item temp=findItem(word);
-        if(temp!=null)temp.means.add(new Meanings(type,desc));
-        else{
-            temp=new Item(word);
+        if(temp==null||!temp.word.equals(word)){
+            temp=new Item(word,items.size());
             temp.means.add(new Meanings(type,desc));
             items.add(temp);
             maxLevel=(int)(Math.log(items.size())/Math.log(2));
         }
+        else temp.means.add(new Meanings(type,desc));
     }
 }
 
 class Item{
-    public Item(String word){
+    Item(String word,int index){
         this.word=word;
+        this.index=index;
     }
-    public String word;
-    public ArrayList<Meanings> means=new ArrayList<Meanings>();
-    public void print(){
-        for(int i=0;i<means.size();i++){
+    int index;
+    String word;
+    ArrayList<Meanings> means=new ArrayList<>();
+    void print(){
+        for (Meanings mean : means) {
             System.out.print(word);
-            means.get(i).print();
+            mean.print();
         }
+    }
+    String getLast(){
+        return word+"("+means.get(means.size()-1)+")";
+    }
+    String getFirst(){
+        return word+"("+means.get(0)+")";
     }
 }
 class Meanings{
-    public Meanings(String type,String desc){
+    Meanings(String type, String desc){
         this.type=type;
         description=desc;
     }
-    public String type,description;
-    public void print(){
-        System.out.print(" : ("+type+") : ");
+    String type;
+    private String description;
+    void print(){
+        System.out.print(" ("+type+") ");
         System.out.println(description);
+    }
+    @Override
+    public String toString(){
+        return type;
     }
 }
