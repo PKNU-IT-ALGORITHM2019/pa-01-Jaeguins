@@ -1,11 +1,12 @@
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Dictionary {
-    private ArrayList<Item> items=new ArrayList<Item>();
+    private ArrayList<Item> items= new ArrayList<>();
     private int maxLevel=0;
-    private int count;
 
 
     public static void main(String args[]){
@@ -22,7 +23,8 @@ public class Dictionary {
                 case "find":
                     param=scanner.nextLine().substring(1);
                     Item result=dict.findItem(param);
-                    if(result!=null&&result.word.equalsIgnoreCase(param))
+                    if(result==null)System.out.println("error occurred.");
+                    else if(result.keyWord.equalsIgnoreCase(param))
                         result.print();
                     else{
                         System.out.println("Not found");
@@ -44,39 +46,15 @@ public class Dictionary {
             }
         }
     }
-    public static int diff(String a,String b){
-        String tA=a.toLowerCase(),tB=b.toLowerCase();
-        int aI=0,bI=0;
-        char aT=tA.charAt(aI),bT=tB.charAt(bI);
-        while(true){
-            if(aT<97||aT>122) {
-                aI++;
-                if(a.length()==aI)return -1;
-                aT=tA.charAt(aI);
-                continue;
-            }
-            if(bT<97||bT>122) {
-                bI++;
-                if(b.length()==bI)return 1;
-                bT = tB.charAt(bI);
-                continue;
-            }
-            if(aT-bT==0){
-
-                aI++;
-                bI++;
-                if(a.length()==aI){
-                    if(b.length()==bI)
-                        return 0;
-                    return -1;
-                }
-                if(b.length()==bI) return 1;
-                aT=tA.charAt(aI);
-                bT=tB.charAt(bI);
-                continue;
-            }else
-            return aT-bT;
+    private static int diff(String a, String b){
+        String compA="",compB="";
+        for(char t:a.toLowerCase().toCharArray()){
+            if(t>=97&&t<=122) compA+=t;
         }
+        for(char t:b.toLowerCase().toCharArray()){
+            if(t>=97&&t<=122) compB+=t;
+        }
+        return compA.compareTo(compB);
     }
     private int find(String param){
         return findItem(param).index;
@@ -89,7 +67,7 @@ public class Dictionary {
             return null;
         if(level>=maxLevel*2)
             return items.get((int) index);
-        int diff=diff(param,items.get((int)index).word);//.toLowerCase().compareTo(items.get((int)index).word.toLowerCase());
+        int diff=diff(param,items.get((int)index).keyWord);//.toLowerCase().compareTo(items.get((int)index).keyWord.toLowerCase());
         if(diff==0)
             return items.get((int)index);
         else {
@@ -104,7 +82,7 @@ public class Dictionary {
         }
     }
     private void readFile(String src){
-        count=0;
+        int count = 0;
         File file=new File(src);
         try{
             FileInputStream inputStream=new FileInputStream(file);
@@ -119,7 +97,7 @@ public class Dictionary {
                 count++;
             }
             inputStream.close();
-            System.out.println(count+" word(s) found, "+(count-items.size())+" were merged.");
+            System.out.println(count +" keyWord(s) found, "+(count -items.size())+" were merged.");
         }
         catch(IOException e){
             System.out.println("File not found.");
@@ -127,50 +105,50 @@ public class Dictionary {
     }
     private void addItem(String word, String type, String desc){
         Item temp=items.size()-1<0?null:items.get(items.size()-1);
-        if(temp==null||!temp.word.equals(word)){
+        if(temp==null||diff(word,temp.keyWord)!=0){
             temp=new Item(word,items.size());
-            temp.means.add(new Meanings(type,desc));
+            temp.means.add(new Meanings(word,type,desc));
             items.add(temp);
             maxLevel=(int)(Math.log(items.size())/Math.log(2));
         }
-        else temp.means.add(new Meanings(type,desc));
+        else temp.means.add(new Meanings(word,type,desc));
     }
 }
 
 class Item{
     @Override
     public String toString(){
-        return word;
+        return keyWord;
     }
     Item(String word,int index){
-        this.word=word;
+        this.keyWord =word;
         this.index=index;
     }
     int index;
-    String word;
+    String keyWord;
     ArrayList<Meanings> means=new ArrayList<>();
     void print(){
         for (Meanings mean : means) {
-            System.out.print(word);
             mean.print();
         }
     }
     String getLast(){
-        return word+"("+means.get(means.size()-1)+")";
+        return keyWord +"("+means.get(means.size()-1)+")";
     }
     String getFirst(){
-        return word+"("+means.get(0)+")";
+        return keyWord +"("+means.get(0)+")";
     }
 }
 class Meanings{
-    Meanings(String type, String desc){
+    Meanings(String word,String type, String desc){
+        this.realWord=word;
         this.type=type;
         description=desc;
     }
-    String type;
+    private String type,realWord;
     private String description;
     void print(){
-        System.out.print(" ("+type+") ");
+        System.out.print(realWord+" ("+type+") ");
         System.out.println(description);
     }
     @Override
