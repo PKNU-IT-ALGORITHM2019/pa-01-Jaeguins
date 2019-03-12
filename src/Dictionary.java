@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Dictionary {
+    private int count=0;
     private ArrayList<Item> items= new ArrayList<>();
     private int maxLevel=0;
 
@@ -36,7 +37,7 @@ public class Dictionary {
 
                     break;
                 case "size":
-                    System.out.println("Total number of words : "+dict.items.size());
+                    dict.print();
                     break;
                 case "exit":
                     return;
@@ -82,7 +83,7 @@ public class Dictionary {
         }
     }
     private void readFile(String src){
-        int count = 0;
+        count = 0;
         File file=new File(src);
         try{
             FileInputStream inputStream=new FileInputStream(file);
@@ -97,11 +98,14 @@ public class Dictionary {
                 count++;
             }
             inputStream.close();
-            System.out.println(count +" keyWord(s) found, "+(count -items.size())+" were merged.");
+            print();
         }
         catch(IOException e){
             System.out.println("File not found.");
         }
+    }
+    private void print(){
+        System.out.println(count +" keyWord(s) found, "+(count -items.size())+" were merged.");
     }
     private void addItem(String word, String type, String desc){
         Item temp=items.size()-1<0?null:items.get(items.size()-1);
