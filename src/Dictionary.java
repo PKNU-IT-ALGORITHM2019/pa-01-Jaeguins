@@ -26,8 +26,9 @@ public class Dictionary {
                         result.print();
                     else{
                         System.out.println("Not found");
-                        System.out.println(dict.items.get(result.index-1).getLast());
-                        System.out.println("- - -");
+                        if(result.index!=0)
+                            System.out.println(dict.items.get(result.index - 1).getLast());
+                            System.out.println("- - -");
                         System.out.println(dict.items.get(result.index).getFirst());
                     }
 
@@ -43,6 +44,40 @@ public class Dictionary {
             }
         }
     }
+    public static int diff(String a,String b){
+        String tA=a.toLowerCase(),tB=b.toLowerCase();
+        int aI=0,bI=0;
+        char aT=tA.charAt(aI),bT=tB.charAt(bI);
+        while(true){
+            if(aT<97||aT>122) {
+                aI++;
+                if(a.length()==aI)return -1;
+                aT=tA.charAt(aI);
+                continue;
+            }
+            if(bT<97||bT>122) {
+                bI++;
+                if(b.length()==bI)return 1;
+                bT = tB.charAt(bI);
+                continue;
+            }
+            if(aT-bT==0){
+
+                aI++;
+                bI++;
+                if(a.length()==aI){
+                    if(b.length()==bI)
+                        return 0;
+                    return -1;
+                }
+                if(b.length()==bI) return 1;
+                aT=tA.charAt(aI);
+                bT=tB.charAt(bI);
+                continue;
+            }else
+            return aT-bT;
+        }
+    }
     private int find(String param){
         return findItem(param).index;
     }
@@ -50,16 +85,22 @@ public class Dictionary {
         return findItem(param,0,1);
     }
     private Item findItem(String param, double index, int level){
-        if(index>=items.size()||index<0)return null;
-        if(level>=maxLevel*2)return items.get((int) index);
-        int diff=param.toLowerCase().compareTo(items.get((int)index).word.toLowerCase());
-        if(diff==0)return items.get((int)index);
+        if(index>=items.size()||index<0)
+            return null;
+        if(level>=maxLevel*2)
+            return items.get((int) index);
+        int diff=diff(param,items.get((int)index).word);//.toLowerCase().compareTo(items.get((int)index).word.toLowerCase());
+        if(diff==0)
+            return items.get((int)index);
         else {
             double t=items.size() / Math.pow(2, level);
-            if (t<1) return items.get((int) index);
-            else return diff > 0 ?
-                    findItem(param, index + t, level + 1) :
-                    findItem(param, index - t, level + 1);
+            if (t<0.5)
+                return items.get((int) index);
+            else
+                if(diff > 0)
+                    return findItem(param, index + t, level + 1);
+                else
+                    return findItem(param, index - t, level + 1);
         }
     }
     private void readFile(String src){
@@ -85,7 +126,7 @@ public class Dictionary {
         }
     }
     private void addItem(String word, String type, String desc){
-        Item temp=findItem(word);
+        Item temp=items.size()-1<0?null:items.get(items.size()-1);
         if(temp==null||!temp.word.equals(word)){
             temp=new Item(word,items.size());
             temp.means.add(new Meanings(type,desc));
@@ -97,6 +138,10 @@ public class Dictionary {
 }
 
 class Item{
+    @Override
+    public String toString(){
+        return word;
+    }
     Item(String word,int index){
         this.word=word;
         this.index=index;
