@@ -9,7 +9,6 @@ public class Dictionary {
     private ArrayList<Item> items= new ArrayList<>();
     private int maxLevel=0;
 
-
     public static void main(String args[]){
         Dictionary dict=new Dictionary();
         Scanner scanner=new Scanner(System.in);
@@ -157,6 +156,6 @@ class Meanings{
     }
     @Override
     public String toString(){
-        return type;
+        return type+"/"+description;
     }
 }
